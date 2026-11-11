@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOGGER - Cyber Credential Extractor</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Orbitron & JetBrains Mono -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            tech: ['Share Tech Mono', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              black: '#05070f',
+              card: '#0a0e1a',
+              cyan: '#00f0ff',
+              magenta: '#ff007f',
+              green: '#00ff66',
+              yellow: '#ffe600',
+              border: '#1a233b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #05070f;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        linear-gradient(to bottom, rgba(5, 7, 15, 0.8), rgba(5, 7, 15, 1)),
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #05070f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border: 1px solid #00f0ff33;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00f0ff;
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 15px -3px rgba(0, 240, 255, 0.3);
+    }
+    .glow-magenta {
+      box-shadow: 0 0 15px -3px rgba(255, 0, 127, 0.3);
+    }
+    .glow-green {
+      box-shadow: 0 0 15px -3px rgba(0, 255, 102, 0.3);
+    }
+    .cyber-border {
+      border: 1px solid rgba(0, 240, 255, 0.2);
+    }
+    .cyber-border:focus-within {
+      border-color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+    .clip-corner {
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    }
+  </style>
+</head>
+<body class="text-slate-200 font-mono min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- Cyber Scanline Effect Overlay -->
+  <div class="pointer-events-none fixed inset-0 z-50 opacity-[0.02] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px]"></div>
+
+  <!-- Top Header -->
+  <header class="border-b border-cyber-cyan/20 bg-cyber-black/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-cyber-cyan/10 border border-cyber-cyan rounded-lg flex items-center justify-center text-cyber-cyan glow-cyan">
+          <i class="fa-solid fa-terminal text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-orbitron font-black text-2xl tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-white to-cyber-magenta">
+            LOGGER
+          </h1>
+          <p class="text-[10px] text-cyber-cyan/60 uppercase tracking-widest font-tech">SYS.LOG_CREDENTIAL_EXTRACTOR // V2.0</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="sampleBtn" class="text-xs px-3 py-2 rounded bg-slate-900 border border-slate-700 hover:border-cyber-cyan text-slate-300 hover:text-cyber-cyan transition font-tech uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-file-code"></i> Load Sample
+        </button>
+        <button id="clearBtn" class="text-xs px-3 py-2 rounded bg-slate-900 border border-slate-700 hover:border-cyber-magenta text-slate-300 hover:text-cyber-magenta transition font-tech uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-trash-can"></i> Clear
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Left Column: Input Box & File Upload (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-4">
+      <div class="bg-cyber-card border border-cyber-cyan/30 rounded-xl p-4 glow-cyan flex flex-col h-full relative">
+        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+          <label for="rawInput" class="text-xs font-orbitron tracking-wider text-cyber-cyan uppercase flex items-center gap-2">
+            <i class="fa-solid fa-database"></i> Log Input & File Upload
+          </label>
+          <span id="accountCounter" class="text-[11px] font-tech text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+            0 ACCOUNTS DETECTED
+          </span>
+        </div>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div id="dropZone" class="mb-3 border-2 border-dashed border-slate-700 hover:border-cyber-cyan rounded-lg p-4 text-center bg-cyber-black/60 transition cursor-pointer group flex flex-col items-center justify-center gap-1.5">
+          <input type="file" id="fileInput" accept=".txt,.log" class="hidden" multiple />
+          <div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 group-hover:border-cyber-cyan flex items-center justify-center text-cyber-cyan transition">
+            <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+          </div>
+          <p class="text-xs font-tech text-slate-300">
+            Drag & drop <span class="text-cyber-cyan font-bold">.txt</span> or <span class="text-cyber-magenta font-bold">.log</span> files here
+          </p>
+          <p class="text-[10px] text-slate-500 font-tech">or click to browse from device</p>
+        </div>
+
+        <div class="relative flex-1 min-h-[300px]">
+          <textarea id="rawInput" 
+            placeholder="Paste multi-account raw logs here..." 
+            class="w-full h-full p-4 bg-cyber-black/90 border border-slate-800 focus:border-cyber-cyan rounded-lg font-mono text-xs text-cyber-cyan focus:outline-none transition resize-none leading-relaxed"
+            spellcheck="false"></textarea>
+        </div>
+
+        <button id="extractBtn" class="mt-4 w-full py-3 bg-gradient-to-r from-cyber-cyan/20 via-cyber-cyan/40 to-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan font-orbitron font-bold text-sm tracking-widest hover:bg-cyber-cyan hover:text-black transition duration-200 glow-cyan rounded flex items-center justify-center gap-2 uppercase">
+          <i class="fa-solid fa-bolt"></i> Extract Credentials
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Column: Extracted Accounts List (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+      
+      <!-- Bulk Actions Bar -->
+      <div class="bg-cyber-card border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-cyber-magenta"></i>
+          <span class="font-orbitron text-xs font-bold text-slate-300 uppercase tracking-wider">Bulk Actions</span>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="copyAllUsernamesBtn" class="text-xs px-3 py-1.5 rounded bg-slate-900 border border-slate-700 hover:border-cyber-cyan text-slate-300 hover:text-cyber-cyan transition font-tech flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i> Usernames
+          </button>
+          <button id="copyAllPasswordsBtn" class="text-xs px-3 py-1.5 rounded bg-slate-900 border border-slate-700 hover:border-cyber-green text-slate-300 hover:text-cyber-green transition font-tech flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i> Passwords
+          </button>
+          <button id="copyAllCombosBtn" class="text-xs px-3 py-1.5 rounded bg-cyber-cyan/10 border border-cyber-cyan text-cyber-cyan hover:bg-cyber-cyan hover:text-black transition font-tech font-bold flex items-center gap-1.5 glow-cyan">
+            <i class="fa-solid fa-clone"></i> All Combos
+          </button>
+          <button id="exportCombosBtn" class="text-xs px-3 py-1.5 rounded bg-cyber-magenta/10 border border-cyber-magenta text-cyber-magenta hover:bg-cyber-magenta hover:text-black transition font-tech font-bold flex items-center gap-1.5 glow-magenta">
+            <i class="fa-solid fa-file-arrow-down"></i> Export .TXT
+          </button>
+        </div>
+      </div>
+
+      <!-- Accounts Scrollable List Container -->
+      <div id="accountsContainer" class="space-y-4 max-h-[calc(100vh-230px)] overflow-y-auto pr-1">
+        <!-- Dynamic account cards will render here -->
+        <div class="bg-cyber-card border border-slate-800/80 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
+          <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-xl">
+            <i class="fa-solid fa-ghost"></i>
+          </div>
+          <p class="text-xs font-tech text-slate-500 uppercase tracking-wider">No credentials extracted yet. Paste logs on the left & click extract.</p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-cyber-black border border-cyber-cyan text-cyber-cyan font-tech text-xs px-4 py-3 rounded-lg shadow-2xl transition-all duration-300 transform translate-y-16 opacity-0 pointer-events-none flex items-center gap-3 glow-cyan z-50">
+    <i class="fa-solid fa-square-check text-base"></i>
+    <span id="toastMsg" class="tracking-wider">Copied to clipboard!</span>
+  </div>
+
+  <!-- JavaScript Parser Engine -->
+  <script>
+    const sampleText = `============================================================
+Account: ramoskaye88@gmail.com:*hans*12HUID: 542048603Username: lalainekaye-20Garena Shell: 0Email: ram****@gmail.com (Verified)Mobile: +63 ****3043Country: PHNickname: art--- Facebook Information ---Facebook Username: Facebook Link: https://www.facebook.com/profile.php?id=1629300337401361Facebook Status: FB UNBIND or FB DELETED--- CODM Information ---Account Level: 400Server: 🇵🇭 Philippines (PH)IGN: [237QUErNHQBUID: 984376425227092--- Login History ---Last Login: August 17, 2026 | 08:51 PMLast Login From: Garena Account CenterLast Login IP: 88.177.219.136Last Login Country: FRAccount Status: Not CleanPowered by: @Dashakinzsuport
+============================================================
+Account: kier092e:09666743110kierUID: 518643617Username: kier092eGarena Shell: 0Email: diz****@gmail.com (Not Verified)Mobile: +63 ****3110Country: PHNickname: --- Facebook Information ---Facebook Username: Facebook Link: https://www.facebook.com/profile.php?id=1084172295685036Facebook Status: FB UNBIND or FB DELETED--- CODM Information ---Account Level: 400Server: 🇵🇭 Philippines (PH)IGN: 伊桑毅山UID: 707967013305568--- Login History ---Last Login: August 17, 2026 | 08:51 PMLast Login From: Garena Account CenterLast Login IP: 109.147.99.200Last Login Country: GBAccount Status: Not CleanPowered by: @Dashakinzsuport
+============================================================`;
+
+    const rawInput = document.getElementById('rawInput');
+    const extractBtn = document.getElementById('extractBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const accountsContainer = document.getElementById('accountsContainer');
+    const accountCounter = document.getElementById('accountCounter');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    let parsedAccounts = [];
+
+    // Core Log Parser Logic
+    function parseLogs(text) {
+      parsedAccounts = [];
+      if (!text || !text.trim()) {
+        renderAccounts();
+        return;
+      }
+
+      // Regex matches pattern Account: username:password up to structural keywords
+      const accountRegex = /Account:\s*([^\s:]+):([^\s]+?)(?=\s*UID:|\s*Username:|\s*Garena Shell:|\s*Email:|\s*================|\s*$)/gi;
+
+      let match;
+      let idCounter = 1;
+
+      while ((match = accountRegex.exec(text)) !== null) {
+        const username = match[1].trim();
+        const password = match[2].trim();
+        if (username && password) {
+          parsedAccounts.push({
+            id: idCounter++,
+            username: username,
+            password: password,
+            combo: `${username}:${password}`
+          });
+        }
+      }
+
+      renderAccounts();
+    }
+
+    // Drag and Drop & File Upload handling
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-cyber-cyan', 'bg-cyber-cyan/10');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-cyber-cyan', 'bg-cyber-cyan/10');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-cyber-cyan', 'bg-cyber-cyan/10');
+      if (e.dataTransfer.files.length > 0) {
+        readFiles(e.dataTransfer.files);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        readFiles(e.target.files);
+      }
+    });
+
+    function readFiles(files) {
+      let combinedContent = '';
+      let fileCount = files.length;
+      let loadedCount = 0;
+
+      Array.from(files).forEach(file => {
+        if (!file.name.endsWith('.txt') && !file.name.endsWith('.log')) {
+          showToast(`Skipped non-txt/log file: ${file.name}`);
+          loadedCount++;
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          combinedContent += '\n' + event.target.result;
+          loadedCount++;
+          if (loadedCount === fileCount) {
+            rawInput.value = (rawInput.value ? rawInput.value + '\n' : '') + combinedContent;
+            parseLogs(rawInput.value);
+            showToast(`Uploaded & processed ${fileCount} file(s)!`);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // Export combos as TXT
+    function exportCombosToFile() {
+      if (parsedAccounts.length === 0) {
+        showToast('No combos available to export!');
+        return;
+      }
+
+      const comboText = parsedAccounts.map(a => a.combo).join('\n');
+      const blob = new Blob([comboText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `extracted_combos_${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported combos file downloaded!');
+    }
+
+    // Render Cards to DOM
+    function renderAccounts() {
+      accountCounter.innerText = `${parsedAccounts.length} ACCOUNT${parsedAccounts.length === 1 ? '' : 'S'} DETECTED`;
+
+      if (parsedAccounts.length === 0) {
+        accountsContainer.innerHTML = `
+          <div class="bg-cyber-card border border-slate-800/80 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-xl">
+              <i class="fa-solid fa-ghost"></i>
+            </div>
+            <p class="text-xs font-tech text-slate-500 uppercase tracking-wider">No accounts detected in log input or uploaded files.</p>
+          </div>`;
+        return;
+      }
+
+      accountsContainer.innerHTML = parsedAccounts.map(acc => `
+        <div class="bg-cyber-card border border-cyber-cyan/30 rounded-xl p-4 glow-cyan space-y-3 relative group">
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+            <span class="text-[10px] font-tech text-cyber-cyan bg-cyber-cyan/10 border border-cyber-cyan/30 px-2 py-0.5 rounded uppercase tracking-wider">
+              #${String(acc.id).padStart(2, '0')} // TARGET_CREDENTIAL
+            </span>
+            <span class="text-[10px] font-tech text-slate-400">READY_FOR_COPY</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- Username Input -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-tech text-slate-400 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-user text-cyber-cyan"></i> Username
+              </label>
+              <div class="flex items-center gap-2 bg-cyber-black border border-slate-800 rounded p-1.5 focus-within:border-cyber-cyan transition">
+                <input type="text" readonly value="${acc.username}" id="user_${acc.id}" class="bg-transparent font-mono text-xs text-cyber-cyan outline-none w-full px-1 truncate">
+                <button onclick="copyFieldValue('user_${acc.id}', this)" class="px-2 py-1 bg-slate-900 hover:bg-cyber-cyan hover:text-black border border-slate-700 text-slate-300 font-tech text-xs rounded transition shrink-0 flex items-center gap-1">
+                  <i class="fa-regular fa-copy"></i> Copy
+                </button>
+              </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-tech text-slate-400 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-key text-cyber-green"></i> Password
+              </label>
+              <div class="flex items-center gap-2 bg-cyber-black border border-slate-800 rounded p-1.5 focus-within:border-cyber-green transition">
+                <input type="text" readonly value="${acc.password}" id="pass_${acc.id}" class="bg-transparent font-mono text-xs text-cyber-green outline-none w-full px-1 truncate">
+                <button onclick="copyFieldValue('pass_${acc.id}', this)" class="px-2 py-1 bg-slate-900 hover:bg-cyber-green hover:text-black border border-slate-700 text-slate-300 font-tech text-xs rounded transition shrink-0 flex items-center gap-1">
+                  <i class="fa-regular fa-copy"></i> Copy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Combo Bar -->
+          <div class="space-y-1 pt-1">
+            <label class="text-[11px] font-tech text-slate-400 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-link text-cyber-yellow"></i> Combo (user:pass)
+            </label>
+            <div class="flex items-center gap-2 bg-cyber-black border border-slate-800 rounded p-1.5 focus-within:border-cyber-yellow transition">
+              <input type="text" readonly value="${acc.combo}" id="combo_${acc.id}" class="bg-transparent font-mono text-xs text-cyber-yellow outline-none w-full px-1 truncate">
+              <button onclick="copyFieldValue('combo_${acc.id}', this)" class="px-3 py-1 bg-slate-900 hover:bg-cyber-yellow hover:text-black border border-slate-700 text-slate-300 font-tech text-xs rounded transition shrink-0 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-clone"></i> Copy Combo
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Single Field Copy Utility
+    function copyFieldValue(inputId, btnElement) {
+      const input = document.getElementById(inputId);
+      if (!input || !input.value) return;
+
+      input.select();
+      document.execCommand('copy');
+
+      const originalText = btnElement.innerHTML;
+      btnElement.innerHTML = `<i class="fa-solid fa-check text-cyber-green"></i> COPIED!`;
+      showToast('Copied to clipboard!');
+
+      setTimeout(() => {
+        btnElement.innerHTML = originalText;
+      }, 1500);
+    }
+
+    // Bulk Copy Utilities
+    function copyBulkData(type) {
+      if (parsedAccounts.length === 0) {
+        showToast('No accounts available to copy!');
+        return;
+      }
+
+      let textToCopy = '';
+      if (type === 'usernames') {
+        textToCopy = parsedAccounts.map(a => a.username).join('\n');
+      } else if (type === 'passwords') {
+        textToCopy = parsedAccounts.map(a => a.password).join('\n');
+      } else if (type === 'combos') {
+        textToCopy = parsedAccounts.map(a => a.combo).join('\n');
+      }
+
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = textToCopy;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempTextArea);
+
+      showToast(`Copied ${parsedAccounts.length} ${type} to clipboard!`);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+      }, 2200);
+    }
+
+    // Event Handlers
+    extractBtn.addEventListener('click', () => parseLogs(rawInput.value));
+    rawInput.addEventListener('input', () => parseLogs(rawInput.value));
+
+    sampleBtn.addEventListener('click', () => {
+      rawInput.value = sampleText;
+      parseLogs(sampleText);
+      showToast('Sample log data loaded!');
+    });
+
+    clearBtn.addEventListener('click', () => {
+      rawInput.value = '';
+      fileInput.value = '';
+      parseLogs('');
+      showToast('Cleared input!');
+    });
+
+    document.getElementById('copyAllUsernamesBtn').addEventListener('click', () => copyBulkData('usernames'));
+    document.getElementById('copyAllPasswordsBtn').addEventListener('click', () => copyBulkData('passwords'));
+    document.getElementById('copyAllCombosBtn').addEventListener('click', () => copyBulkData('combos'));
+    document.getElementById('exportCombosBtn').addEventListener('click', exportCombosToFile);
+
+    // On Load Initializer
+    window.onload = function() {
+      rawInput.value = sampleText;
+      parseLogs(sampleText);
+    };
+  </script>
+</body>
+</html>
